@@ -6,6 +6,7 @@ import json, random, asyncio
 from dotenv import load_dotenv
 from discord.ext.commands import Bot
 from discord import app_commands
+from riotwatcher import LolWatcher, ApiError
 
 load_dotenv()
 TOKEN = os.getenv('TOKEN')
@@ -19,9 +20,36 @@ intents.members = True
 intents.message_content = True
 client = discord.Client(intents=intents)
 
+lol_watcher = LolWatcher(API_KEY)
+
+my_region = 'na1'
+
+# def masteryPoints():
+#     points_id = []
+#     championid = []
+#     mastery = lol_watcher.champion_mastery.by_summoner(my_region, 'u8yzPFakLPjWuY5M8f4PwRPaoYpk49Z1uYrgy1enU3XBbQmP4Q1ljqd7Nw')
+#     for index in (range(len(mastery))):
+#         points_id.append(mastery[index]['championPoints'])
+#         championid.append(mastery[index]['championId'])
+#     top3 = sorted(zip(points_id, championid), reverse=True)[:3]
+#     for x,y in top3:
+#       return y
+    
+#     # 'https://ddragon.leagueoflegends.com/cdn/6.24.1/data/en_US/champion.json'
+# masteryPoints()
 
 
 
+
+# def champions_name():
+#     ids = masteryPoints()
+#     championurl = 'https://ddragon.leagueoflegends.com/cdn/6.24.1/data/en_US/champion.json'
+#     parse_json = json.loads(requests.get(championurl).text)
+#     print(parse_json['key'])
+
+# # def champion_name():
+
+# champions_name()
 def get_summoner_id(summoner_name):
     api_key = API_KEY
     api_url= "https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/"
@@ -30,7 +58,43 @@ def get_summoner_id(summoner_name):
     data = response_API.text
     parse_json = json.loads(data)    
     summoner_id = parse_json['id']
+    print(summoner_id)
     return summoner_id
+
+def get_puuid(summoner_name):
+    api_key = API_KEY
+    api_url= "https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/"
+    api_url = api_url + summoner_name +'?api_key=' + api_key
+    parse_json = json.loads(requests.get(api_url).text)
+    puuid = parse_json['puuid']
+    print(puuid)
+    return puuid
+
+def get_matchList(puuid):
+    api_key = API_KEY
+    api_url = 'https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/'
+    api_url = api_url + puuid + '/ids?start=0&count=20&api_key=' + api_key
+    print(api_url)
+    parse_json = json.loads(requests.get(api_url).text)
+    value = parse_json.pop(len(parse_json)-1)
+    return value
+
+def get_matchData(matchid):
+    api_key = API_KEY
+    api_url = 'https://americas.api.riotgames.com/lol/match/v5/matches/' + matchid + '?api_key=' + api_key
+    parse_json = json.loads(requests.get(api_url).text)
+    matchdata = parse_json['info']['participants'][0]
+    print(matchdata)
+    return matchdata
+
+
+def goldpermin():
+    data = get_matchData(get_matchList(get_puuid('Noor')))
+    print(data['goldEarned'])
+    return data['goldEarned']
+
+goldpermin()
+# get_matchData(get_matchList(get_puuid('Noor')))
 
 def get_rank(summoner_id):
     api_key = API_KEY
@@ -122,3 +186,4 @@ def get_pfp_id(summoner_name):
     parse_json = json.loads(response_API.text)
     pfp_id = parse_json['profileIconId']
     return pfp_id
+

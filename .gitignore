@@ -1,2 +1,5 @@
 #ignoring a specific file 
 .env
+
+#ignoring pycache file
+**/__pycache__/ 
